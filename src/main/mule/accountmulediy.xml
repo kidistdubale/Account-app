@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="069828db-5842-4379-b4c8-810d99d861b4" >
+		<db:my-sql-connection host="mudb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	
+	<flow name="getAccountInfoFlow" doc:id="136673bd-80f6-4fcc-ba0a-f654ecc45cd6" >
+		<db:select doc:name="Select" doc:id="ee7884c9-aead-418d-84e1-22cd9b29fa5d" config-ref="Database_Config">
+			<db:sql >SELECT * FROM flights_customers </db:sql>
+			<db:input-parameters ><![CDATA[#[{'type': attributes.queryParams.'type'}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="09b3f377-b061-47d6-8b8d-f470d9436928" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+  payload map ((payload01 , indexOfPayload01)-> {
+	    id: payload01.accountID,
+		firstName:  (payload01.name default ("") splitBy  ' ' ) [0],
+		lastName:  (payload01.name default ("") splitBy ' ' ) [1],
+		address:  (payload01.street default"") ++ (payload01.city default"") ++ "," ++ (payload01.state default""),
+		postal: payload01.postal,
+		country: payload01.country,
+		creationDate: payload01.creationDate,
+		accountType: payload01.accountType,
+		miles: payload01.miles
+		
+		
+
+}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e0fa2910-9515-4613-80f1-8dd012820c09" message="After DB call"/>
+	</flow>
+	<api-gateway:autodiscovery apiId="16033908" doc:name="API Autodiscovery" doc:id="a583856d-a380-4e98-a1d4-47547c88a908" flowRef="getAccountInfoFlow" />
+	<flow name="postAccountInfoFlow" doc:id="06cc033e-2466-4652-8756-b0c9d4e39f09" >
+		<db:insert doc:name="Insert" doc:id="8e773beb-cba0-489d-b874-1e13ce7152ad" config-ref="Database_Config">
+			<db:sql >INSERT INTO flights_customers </db:sql>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="015a7046-b75d-4313-b69e-9d22c63fc1ac">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	response: {
+		status: "success"
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0d91a8d9-c02c-4369-b3a9-76c6eff0169d" />
+	</flow>
+	<flow name="getAccountFlowByID" doc:id="902b795c-7e6c-4f22-b282-40f6f794084d" >
+		<db:select doc:name="Select" doc:id="20acfc4f-1a3b-4330-9f5b-93181bc4af02" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM flights_customers </db:sql>
+			<db:input-parameters ><![CDATA[#[{'type': attributes.queryParams.'type'}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="1cb32e28-2c56-440f-8eeb-5890026b0f91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+  payload map ((payload01 , indexOfPayload01)-> {
+	    id: payload01.accountID,
+		firstName:  (payload01.name default ("") splitBy  ' ' ) [0],
+		lastName:  (payload01.name default ("") splitBy ' ' ) [1],
+		address:  (payload01.street default"") ++ (payload01.city default"") ++ "," ++ (payload01.state default""),
+		postal: payload01.postal,
+		country: payload01.country,
+		creationDate: payload01.creationDate,
+		accountType: payload01.accountType,
+		miles: payload01.miles
+		
+		
+
+}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d3a7ba30-0047-4cd9-a4f8-4dcc4157ef24" />
+	</flow>
+</mule>
