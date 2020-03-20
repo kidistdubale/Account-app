@@ -12,7 +12,7 @@
                 <http:body><![CDATA[#[payload]]]></http:body>
             </http:error-response>
         </http:listener>
-        <logger level="INFO" doc:name="Logger" doc:id="35c05535-acf4-4e66-a348-6a544d6ad5e5" />
+        <logger level="INFO" doc:name="Logger" doc:id="35c05535-acf4-4e66-a348-6a544d6ad5e5" message="#[payload]"/>
 		<apikit:router config-ref="accounts-api-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
